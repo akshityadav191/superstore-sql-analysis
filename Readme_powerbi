@@ -1,0 +1,69 @@
+# Superstore Power BI Dashboard
+
+An interactive 3-page Power BI dashboard analyzing 9,994 retail orders from the 
+Superstore dataset — the same dataset previously analyzed in Excel and SQL, 
+now visualized end-to-end with DAX measures, a proper star schema, and 
+drillthrough navigation.
+
+
+## Pages
+
+**1. Executive Summary**
+- 4 KPI cards: Total Sales, Total Profit, Total Orders, Profit Margin %
+- Yearly sales trend line
+- Sales by Category bar chart
+- Year slicer
+
+**2. Geographic Analysis**
+- Map visual: state-level sales, sized by revenue
+- Total Sales by State, ranked
+- Category × Region breakdown matrix
+- Region slicer
+
+**3. Product Details (drillthrough)**
+- Right-click any product-linked visual on Page 1 to drill into a single 
+  product's performance
+- Product-level KPIs: Total Sales, Total Profit, Product Rank
+- Full order-level detail table for the selected product
+
+## Data model
+
+Star schema with one fact table and two dimension tables:
+- **SUPERSTORE SQL** (fact) — order-level transactions: Sales, Profit, 
+  Discount, Quantity
+- **Products** (dimension) — Product ID, Name, Category, Sub-Category
+- **Date** (dimension) — dedicated calendar table built with `CALENDAR()`, 
+  required for time intelligence functions
+
+## Key DAX measures
+
+```dax
+Total Sales = SUM('SUPERSTORE SQL'[Sales])
+
+Total Profit = SUM('SUPERSTORE SQL'[Profit])
+
+Profit Margin % = DIVIDE([Total Profit], [Total Sales], 0)
+
+YTD Sales = TOTALYTD(SUM('SUPERSTORE SQL'[Sales]), 'Date'[Date])
+
+Sales LY = CALCULATE([Total Sales], SAMEPERIODLASTYEAR('Date'[Date]))
+
+YoY Sales Growth % = 
+VAR CurrentSales = [Total Sales]
+VAR PriorYearSales = CALCULATE([Total Sales], SAMEPERIODLASTYEAR('Date'[Date]))
+RETURN
+DIVIDE(CurrentSales - PriorYearSales, PriorYearSales, 0)
+
+Product Rank = RANKX(ALL(Products[Product Name]), [Total Sales])
+```
+
+## Features
+
+- Custom page navigation (Page Navigator)
+- Cross-filtering and slicers across all visuals on a page
+- Drillthrough from summary visuals to a dedicated product detail page
+- Time intelligence: year-to-date totals and year-over-year growth
+
+## Tools
+
+Power BI Desktop · DAX · Power Query (M)
